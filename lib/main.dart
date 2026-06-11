@@ -1,4 +1,4 @@
-import 'package:era92_elevate/screens/home_screen.dart';
+import 'package:era92_elevate/screens/app_screens/home_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
