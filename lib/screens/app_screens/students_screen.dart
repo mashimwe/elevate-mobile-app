@@ -5,6 +5,20 @@ class StudentsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return  Scaffold(
+      
+      // body with centered text 'Students Screen'
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Text(
+            'Students Screen',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+
+     
+    );
   }
 }
