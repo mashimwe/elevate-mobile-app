@@ -1,5 +1,5 @@
-import 'package:era92_elevate/screens/app_screens/home_screen.dart';
-import 'package:era92_elevate/screens/auth_screens/login_screen.dart';
+import 'package:era92_elevate/screens/app_screens/Students_screen/student_shell.dart';
+import 'package:era92_elevate/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -14,10 +14,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const LoginScreen(),
+      theme: AppTheme.light,
+      home: const StudentShell(),
     );
   }
 }
