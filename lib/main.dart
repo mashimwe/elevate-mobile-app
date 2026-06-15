@@ -1,11 +1,11 @@
 import 'package:era92_elevate/screens/app_screens/home_screen.dart';
+import 'package:era92_elevate/screens/auth_screens/loginPage.dart';
 import 'package:era92_elevate/screens/auth_screens/login_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
   runApp(const MyApp());
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const LoginScreen(),
+      home: const LoginPage(),
     );
   }
 }
