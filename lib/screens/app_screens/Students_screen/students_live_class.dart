@@ -7,7 +7,12 @@ class StudentsLiveClass extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Live Classes'),
+        backgroundColor: AppColors.primary,
+      ),
       backgroundColor: AppColors.background,
+
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -29,6 +34,10 @@ class StudentsLiveClass extends StatelessWidget {
           ),
         ),
       ),
+
+      // floaring button
+      //nav abar
+
     );
   }
 }

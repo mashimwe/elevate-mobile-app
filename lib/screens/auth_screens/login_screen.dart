@@ -1,5 +1,6 @@
 import 'package:era92_elevate/componets/text_field.dart';
 import 'package:era92_elevate/componets/my_button.dart';
+import 'package:era92_elevate/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -17,13 +18,7 @@ class LoginScreen extends StatelessWidget {
             const SizedBox(height: 20),
             MyTextfield(label: 'Enter password', icon: Icons.lock),
             const SizedBox(height: 20),
-            //my btton
-            MyButton(
-              text: 'Login',
-              onPressed: () {
-                // Handle login logic here
-              },
-            ),
+            Text("data", style: TextStyle(color: AppColors.primary),)
           ],
         ),
       ),

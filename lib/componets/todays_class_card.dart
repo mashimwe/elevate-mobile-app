@@ -98,7 +98,9 @@ class TodaysClassCard extends StatelessWidget {
                     top: 12,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.white,
                         borderRadius: BorderRadius.circular(20),
@@ -110,7 +112,7 @@ class TodaysClassCard extends StatelessWidget {
                             width: 5,
                             height: 5,
                             decoration: const BoxDecoration(
-                              color: AppColors.primary,
+                              // color: AppColors.primary,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -141,17 +143,20 @@ class TodaysClassCard extends StatelessWidget {
                   Text(
                     subjectName,
                     style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                          fontWeight: FontWeight.w700,
-                          height: 1.2,
-                        ),
+                      fontWeight: FontWeight.w700,
+                      height: 1.2,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      const Icon(Icons.person_outline_rounded,
-                          size: 12, color: AppColors.textSecondary),
+                      const Icon(
+                        Icons.person_outline_rounded,
+                        size: 12,
+                        color: AppColors.textSecondary,
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
@@ -166,8 +171,11 @@ class TodaysClassCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.access_time_rounded,
-                          size: 12, color: AppColors.textSecondary),
+                      const Icon(
+                        Icons.access_time_rounded,
+                        size: 12,
+                        color: AppColors.textSecondary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '$startTime – $endTime',
