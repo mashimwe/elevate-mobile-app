@@ -1,32 +1,38 @@
+import 'package:era92_elevate/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class MyButton extends StatelessWidget {
+  const MyButton({super.key, required this.text, required this.onPressed});
+
   final String text;
   final VoidCallback onPressed;
-
-  const MyButton({super.key, required this.text, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue, Colors.lightBlueAccent],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(8),
+          gradient: AppGradients.primary,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: Center(
           child: Text(
             text,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+            style: const TextStyle(
+              color: AppColors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.4,
             ),
           ),
         ),

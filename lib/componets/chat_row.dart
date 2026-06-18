@@ -1,103 +1,149 @@
-import 'package:flutter/material.dart';
 import 'package:era92_elevate/theme/app_theme.dart';
+import 'package:flutter/material.dart';
 
-class ChartRow extends StatelessWidget {
+class ChatRow extends StatelessWidget {
   final String initials;
   final String name;
   final String lastMessage;
   final String time;
   final int unreadCount;
+  final bool isOnline;
+  final VoidCallback? onTap;
 
-  const ChartRow({super.key, 
-  required this.initials, 
-  required this.name, 
-  required this.lastMessage, 
-  required this.time, 
-  required this.unreadCount});
+  const ChatRow({
+    super.key,
+    required this.initials,
+    required this.name,
+    required this.lastMessage,
+    required this.time,
+    this.unreadCount = 0,
+    this.isOnline = false,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row( 
-          mainAxisAlignment: MainAxisAlignment.start,
+    final hasUnread = unreadCount > 0;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        child: Row(
           children: [
-            CircleAvatar( 
-              backgroundColor: AppColors.primary,
-              child: Text( 
-                initials,
-                style: TextStyle(
-                  fontFamily: 'Instrument',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
+            // ── Avatar ───────────────────────────────────────────
+            Stack(
+              children: [
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: AppGradients.primaryDiagonal,
+                  ),
+                  child: Center(
+                    child: Text(
+                      initials,
+                      style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                if (isOnline)
+                  Positioned(
+                    bottom: 1,
+                    right: 1,
+                    child: Container(
+                      width: 14,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: AppColors.success,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.white, width: 2),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            const SizedBox(width: 15), 
+            const SizedBox(width: 14),
+
+            // ── Name + preview ────────────────────────────────────
             Expanded(
-              child: Column( 
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     name,
                     style: TextStyle(
-                      fontFamily: 'Instrument',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: const Color.fromARGB(255, 19, 19, 19),
+                      fontSize: 15,
+                      fontWeight:
+                          hasUnread ? FontWeight.w700 : FontWeight.w600,
+                      color: AppColors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 0),
+                  const SizedBox(height: 3),
                   Text(
                     lastMessage,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontFamily: 'Instrument',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: const Color.fromARGB(255, 19, 19, 19).withValues(alpha: 150),
+                      fontSize: 13,
+                      color: hasUnread
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
+                      fontWeight:
+                          hasUnread ? FontWeight.w500 : FontWeight.w400,
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: 12),
+
+            // ── Time + badge ──────────────────────────────────────
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
                   time,
                   style: TextStyle(
-                    fontFamily: 'Instrument',
-                    fontSize: 10,
-                    color: const Color.fromARGB(255, 19, 19, 19).withValues(alpha: 150),
+                    fontSize: 11,
+                    color:
+                        hasUnread ? AppColors.primary : AppColors.textLight,
+                    fontWeight:
+                        hasUnread ? FontWeight.w600 : FontWeight.w400,
                   ),
                 ),
-                const SizedBox(height: 4),
-                if (unreadCount > 0)
-                  CircleAvatar( 
-                    radius: 10,
-                    backgroundColor: AppColors.primary,
-                    child: Text( 
-                      unreadCount.toString(),
-                      style: TextStyle(
-                        fontFamily: 'Instrument',
-                        fontSize: 9,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
+                const SizedBox(height: 5),
+                if (hasUnread)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      gradient: AppGradients.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '$unreadCount',
+                      style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ),
+                  )
+                else
+                  const SizedBox(height: 18),
               ],
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        Divider(
-          color: AppColors.textSecondary.withValues(alpha: 150),
-          thickness: 0.5,
-        ),
-        const SizedBox(height: 12),
-      ],
+      ),
     );
   }
 }
