@@ -32,14 +32,14 @@ class LessonCard extends StatelessWidget {
         boxShadow: isActive
             ? [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.28),
+                  color: AppColors.primary.withValues(alpha: 0.28),
                   blurRadius: 20,
                   offset: const Offset(0, 6),
                 ),
               ]
             : [
                 BoxShadow(
-                  color: AppColors.textLight.withOpacity(0.15),
+                  color: AppColors.textLight.withValues(alpha: 0.15),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -48,14 +48,13 @@ class LessonCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Time + Ongoing badge row
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: isActive
-                      ? Colors.white.withOpacity(0.20)
+                      ? Colors.white.withValues(alpha: 0.20)
                       : AppColors.background,
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -74,7 +73,7 @@ class LessonCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.20),
+                    color: Colors.white.withValues(alpha: 0.20),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -125,7 +124,7 @@ class LessonCard extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w500,
               color: isActive
-                  ? AppColors.white.withOpacity(0.85)
+                  ? AppColors.white.withValues(alpha: 0.85)
                   : AppColors.textSecondary,
             ),
           ),
@@ -135,7 +134,7 @@ class LessonCard extends StatelessWidget {
           Container(
             height: 1,
             color: isActive
-                ? Colors.white.withOpacity(0.20)
+                ? Colors.white.withValues(alpha: 0.20)
                 : AppColors.divider,
             margin: const EdgeInsets.only(bottom: 10),
           ),
@@ -147,7 +146,7 @@ class LessonCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               color: isActive
-                  ? AppColors.white.withOpacity(0.75)
+                  ? AppColors.white.withValues(alpha: 0.75)
                   : AppColors.textLight,
               height: 1.4,
             ),
