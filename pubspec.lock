@@ -304,17 +304,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.11"
-<<<<<<< Updated upstream
-  typed_data:
-    dependency: transitive
-    description:
-      name: typed_data
-      sha256: f9049c039ebfeb4cf7a7104a675823cd72dba8297f264b6637062516699fa006
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.4.0"
-=======
->>>>>>> Stashed changes
+
   vector_math:
     dependency: transitive
     description:
@@ -349,8 +339,5 @@ packages:
     version: "1.1.0"
 sdks:
   dart: ">=3.10.0-0 <4.0.0"
-<<<<<<< Updated upstream
   flutter: ">=3.35.0"
-=======
   flutter: ">=3.18.0-18.0.pre.54"
->>>>>>> Stashed changes

@@ -3,6 +3,7 @@ import 'package:era92_elevate/screens/app_screens/Students_screen/students_chat.
 import 'package:era92_elevate/screens/app_screens/Students_screen/students_home.dart';
 import 'package:era92_elevate/screens/app_screens/Students_screen/students_live_class.dart';
 import 'package:era92_elevate/screens/app_screens/Students_screen/students_timetable.dart';
+import 'package:era92_elevate/screens/app_screens/Students_screen/students_assessment.dart';
 import 'package:flutter/material.dart';
 
 class StudentShell extends StatefulWidget {
@@ -21,6 +22,7 @@ class _StudentShellState extends State<StudentShell> {
     StudentsLiveClass(),
     StudentsTimetable(),
     StudentsChat(),
+    StudentsAssessment(),
   ];
 
   @override
