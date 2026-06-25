@@ -1,4 +1,5 @@
 import 'package:era92_elevate/componets/announcements.dart';
+import 'package:era92_elevate/componets/my_button.dart';
 import 'package:era92_elevate/componets/todays_class_card.dart';
 import 'package:flutter/material.dart';
 import 'package:era92_elevate/theme/app_theme.dart';
@@ -80,8 +81,7 @@ class StudentsHome extends StatelessWidget {
                     ),
                     CircleAvatar(
                       radius: 22,
-                      backgroundColor:
-                          AppColors.primary.withValues(alpha: 0.1),
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                       child: const Icon(
                         Icons.person_rounded,
                         color: AppColors.primary,
@@ -140,6 +140,8 @@ class StudentsHome extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
+
+        
             ],
           ),
         ),
