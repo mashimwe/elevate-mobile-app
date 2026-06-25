@@ -110,7 +110,7 @@ class AssignmentTile extends StatelessWidget {
                         Text(
                           item.title,
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,
                           ),
@@ -119,7 +119,7 @@ class AssignmentTile extends StatelessWidget {
                         Text(
                           item.subject,
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 13,
                             color: AppColors.textSecondary,
                           ),
                         ),
@@ -128,14 +128,14 @@ class AssignmentTile extends StatelessWidget {
                           children: [
                             const Icon(
                               Icons.calendar_today_outlined,
-                              size: 11,
+                              size: 13,
                               color: AppColors.textLight,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               item.dueDate,
                               style: const TextStyle(
-                                fontSize: 11,
+                                fontSize: 13,
                                 color: AppColors.textLight,
                               ),
                             ),
@@ -153,7 +153,7 @@ class AssignmentTile extends StatelessWidget {
                                 child: Text(
                                   _deadlineText,
                                   style: TextStyle(
-                                    fontSize: 10,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                     color: _deadlineColor,
                                   ),
@@ -197,7 +197,7 @@ class AssignmentTile extends StatelessWidget {
                         child: Text(
                           assignmentStatusLabel(item.status),
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: statusColor,
                           ),
@@ -222,7 +222,7 @@ class AssignmentTile extends StatelessWidget {
                           child: Text(
                             item.instructions,
                             style: const TextStyle(
-                              fontSize: 11,
+                              fontSize: 13,
                               color: AppColors.textLight,
                               height: 1.4,
                             ),
@@ -247,7 +247,7 @@ class AssignmentTile extends StatelessWidget {
                               children: [
                                 Icon(
                                   Icons.upload_outlined,
-                                  size: 13,
+                                  size: 14,
                                   color: AppColors.white,
                                 ),
                                 SizedBox(width: 5),
@@ -255,7 +255,7 @@ class AssignmentTile extends StatelessWidget {
                                   'Submit',
                                   style: TextStyle(
                                     color: AppColors.white,
-                                    fontSize: 12,
+                                    fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -271,7 +271,7 @@ class AssignmentTile extends StatelessWidget {
                           child: Text(
                             item.instructions,
                             style: const TextStyle(
-                              fontSize: 11,
+                              fontSize: 13,
                               color: AppColors.textLight,
                               height: 1.4,
                             ),
@@ -283,7 +283,7 @@ class AssignmentTile extends StatelessWidget {
                         Text(
                           'View details',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: AppColors.primary,
                           ),
@@ -403,7 +403,7 @@ class _AssignmentSubmitSheetState extends State<AssignmentSubmitSheet> {
           const SizedBox(height: 2),
           Text(
             widget.assignment.title,
-            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            style: const TextStyle(fontSize: 15, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 16),
           Container(
@@ -426,7 +426,7 @@ class _AssignmentSubmitSheetState extends State<AssignmentSubmitSheet> {
                 Text(
                   '${widget.assignment.dueDate}  ·  ${widget.deadlineText}',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: widget.deadlineColor,
                   ),
@@ -438,7 +438,7 @@ class _AssignmentSubmitSheetState extends State<AssignmentSubmitSheet> {
           const Text(
             'Paste your work link',
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 15,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
@@ -446,7 +446,7 @@ class _AssignmentSubmitSheetState extends State<AssignmentSubmitSheet> {
           const SizedBox(height: 4),
           const Text(
             'Share a Google Drive, GitHub, or any public link.',
-            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 10),
           TextField(

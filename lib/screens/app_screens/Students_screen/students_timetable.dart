@@ -1,23 +1,52 @@
-import 'dart:math';
 import 'package:era92_elevate/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
-// ── Data models ────────────────────────────────────────────────────────────────
+// ── Lesson definitions (fixed schedule) ───────────────────────────────────────
 
-class _DayData {
-  const _DayData({
-    required this.num,
-    required this.name,
-    required this.fullName,
-    required this.isToday,
-    required this.dayIndex,
+class _LessonDef {
+  const _LessonDef({
+    required this.subject,
+    required this.instructor,
+    required this.startHour,
+    required this.startMin,
+    required this.endHour,
+    required this.endMin,
+    required this.description,
   });
-  final String num;
-  final String name;
-  final String fullName;
-  final bool isToday;
-  final int dayIndex;
+  final String subject, instructor, description;
+  final int startHour, startMin, endHour, endMin;
+
+  String get timeDisplay {
+    final s = '${startHour.toString().padLeft(2, '0')}:${startMin.toString().padLeft(2, '0')}';
+    final e = '${endHour.toString().padLeft(2, '0')}:${endMin.toString().padLeft(2, '0')}';
+    return '$s – $e';
+  }
 }
+
+const _webDev = _LessonDef(
+  subject: 'Website Development',
+  instructor: 'Mr. Bashir Kasujja',
+  startHour: 9, startMin: 0,
+  endHour: 11, endMin: 0,
+  description: 'HTML, CSS & JavaScript',
+);
+
+const _fellowship = _LessonDef(
+  subject: 'Fellowship',
+  instructor: 'Pastor James',
+  startHour: 12, startMin: 0,
+  endHour: 13, endMin: 0,
+  description: 'Life Skills & Values',
+);
+
+// 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun
+const _schedule = <int, List<_LessonDef>>{
+  0: [_webDev],
+  2: [_fellowship],
+  3: [_webDev],
+};
+
+// ── Runtime lesson model ───────────────────────────────────────────────────────
 
 class _Lesson {
   const _Lesson({
@@ -27,48 +56,69 @@ class _Lesson {
     required this.description,
     this.isOngoing = false,
   });
-  final String subject;
-  final String time;
-  final String instructor;
-  final String description;
+  final String subject, time, instructor, description;
   final bool isOngoing;
 }
 
-// ── Static data ────────────────────────────────────────────────────────────────
-
-const _weekDays = [
-  _DayData(num: '10', name: 'Mon', fullName: 'Monday', isToday: false, dayIndex: 0),
-  _DayData(num: '11', name: 'Tue', fullName: 'Tuesday', isToday: false, dayIndex: 1),
-  _DayData(num: '12', name: 'Wed', fullName: 'Wednesday', isToday: false, dayIndex: 2),
-  _DayData(num: '13', name: 'Thu', fullName: 'Thursday', isToday: true, dayIndex: 3),
-  _DayData(num: '14', name: 'Fri', fullName: 'Friday', isToday: false, dayIndex: 4),
-  _DayData(num: '15', name: 'Sat', fullName: 'Saturday', isToday: false, dayIndex: 5),
-  _DayData(num: '16', name: 'Sun', fullName: 'Sunday', isToday: false, dayIndex: 6),
-];
-
-const _allSubjects = [
-  {'subject': 'Graphics Design', 'instructor': 'Dr. Smith', 'time': '08:00 – 09:30', 'desc': 'Layout & Hierarchy'},
-  {'subject': 'Web Development', 'instructor': 'Prof. Johnson', 'time': '10:00 – 11:30', 'desc': 'Introduction to Web'},
-  {'subject': 'Motion Graphics', 'instructor': 'Dr. Lee', 'time': '12:00 – 13:30', 'desc': 'Fundamentals of Motion'},
-  {'subject': 'UI/UX Design', 'instructor': 'Ms. Nakato', 'time': '14:00 – 15:30', 'desc': 'User Research & Wireframing'},
-  {'subject': 'Photography', 'instructor': 'Mr. Okello', 'time': '08:00 – 09:30', 'desc': 'Composition & Lighting'},
-  {'subject': 'Brand Identity', 'instructor': 'Mr. Mugisha', 'time': '10:00 – 11:30', 'desc': 'Logo Design & Brand Systems'},
-  {'subject': 'Typography', 'instructor': 'Dr. Apio', 'time': '12:00 – 13:30', 'desc': 'Type Hierarchy & Pairing'},
-];
-
-List<_Lesson> _lessonsForDay(int dayIndex) {
-  if (dayIndex == 6) return []; // Sunday — no classes
-  final pool = List<Map<String, String>>.from(_allSubjects.cast<Map<String, String>>());
-  pool.shuffle(Random(dayIndex));
-  final count = dayIndex == 5 ? 1 : 3;
-  return List.generate(count, (i) {
-    final s = pool[i];
+List<_Lesson> _lessonsForDay(int dayIndex, {bool isToday = false}) {
+  final defs = _schedule[dayIndex] ?? [];
+  if (defs.isEmpty) return [];
+  final now = DateTime.now();
+  final lessons = defs.map((def) {
+    bool ongoing = false;
+    if (isToday) {
+      final start = DateTime(now.year, now.month, now.day, def.startHour, def.startMin);
+      final end = DateTime(now.year, now.month, now.day, def.endHour, def.endMin);
+      ongoing = now.isAfter(start) && now.isBefore(end);
+    }
     return _Lesson(
-      subject: s['subject']!,
-      time: s['time']!,
-      instructor: s['instructor']!,
-      description: s['desc']!,
-      isOngoing: dayIndex == 3 && i == 1, // Thursday, second class is ongoing
+      subject: def.subject,
+      time: def.timeDisplay,
+      instructor: def.instructor,
+      description: def.description,
+      isOngoing: ongoing,
+    );
+  }).toList()
+    ..sort((a, b) {
+      if (a.isOngoing == b.isOngoing) return 0;
+      return a.isOngoing ? -1 : 1; // ongoing comes first
+    });
+  return lessons;
+}
+
+// ── Day data (dynamic, computed from current week) ────────────────────────────
+
+class _DayData {
+  const _DayData({
+    required this.date,
+    required this.name,
+    required this.fullName,
+    required this.dayIndex,
+    required this.isToday,
+  });
+  final DateTime date;
+  final String name;
+  final String fullName;
+  final int dayIndex;
+  final bool isToday;
+}
+
+List<_DayData> _buildWeekDays() {
+  final now = DateTime.now();
+  final monday = now.subtract(Duration(days: now.weekday - 1));
+  const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const fullNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  return List.generate(7, (i) {
+    final day = monday.add(Duration(days: i));
+    return _DayData(
+      date: day,
+      name: names[i],
+      fullName: fullNames[i],
+      dayIndex: i,
+      isToday:
+          day.day == now.day &&
+          day.month == now.month &&
+          day.year == now.year,
     );
   });
 }
@@ -83,12 +133,14 @@ class StudentsTimetable extends StatefulWidget {
 }
 
 class _StudentsTimetableState extends State<StudentsTimetable> {
+  late final List<_DayData> _weekDays;
   late int _selectedDay;
   late final ScrollController _dayStripController;
 
   @override
   void initState() {
     super.initState();
+    _weekDays = _buildWeekDays();
     _selectedDay = _weekDays.indexWhere((d) => d.isToday);
     if (_selectedDay < 0) _selectedDay = 0;
     _dayStripController = ScrollController();
@@ -117,15 +169,17 @@ class _StudentsTimetableState extends State<StudentsTimetable> {
   @override
   Widget build(BuildContext context) {
     final day = _weekDays[_selectedDay];
-    final lessons = _lessonsForDay(_selectedDay);
+    final lessons = _lessonsForDay(_selectedDay, isToday: day.isToday);
+    const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final monthYear = '${months[day.date.month]} ${day.date.year}';
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Header ──────────────────────────────────────────────────────
+            // ── Header ────────────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
               child: Row(
@@ -134,14 +188,19 @@ class _StudentsTimetableState extends State<StudentsTimetable> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Schedule',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.3,
+                        ),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
-                        'June 2025',
-                        style: TextStyle(
+                      Text(
+                        monthYear,
+                        style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,
                           fontWeight: FontWeight.w500,
@@ -150,25 +209,18 @@ class _StudentsTimetableState extends State<StudentsTimetable> {
                     ],
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.white,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: AppColors.border),
                     ),
                     child: const Row(
                       children: [
-                        Icon(
-                          Icons.calendar_month_rounded,
-                          size: 14,
-                          color: AppColors.primary,
-                        ),
+                        Icon(Icons.calendar_month_rounded, size: 14, color: AppColors.primary),
                         SizedBox(width: 5),
                         Text(
-                          'Week 2',
+                          'This Week',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -183,7 +235,7 @@ class _StudentsTimetableState extends State<StudentsTimetable> {
             ),
             const SizedBox(height: 20),
 
-            // ── Day strip ────────────────────────────────────────────────────
+            // ── Day strip ─────────────────────────────────────────────────────
             SizedBox(
               height: 70,
               child: ListView.builder(
@@ -194,16 +246,15 @@ class _StudentsTimetableState extends State<StudentsTimetable> {
                 itemBuilder: (context, i) {
                   final d = _weekDays[i];
                   final isSelected = i == _selectedDay;
+                  final hasClass = _schedule.containsKey(i);
                   return GestureDetector(
-                    onTap: () => setState(() {
-                      _selectedDay = i;
-                    }),
+                    onTap: () => setState(() => _selectedDay = i),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       width: 46,
                       margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary : AppColors.white,
+                        color: isSelected ? AppColors.primary : Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isSelected
@@ -222,31 +273,31 @@ class _StudentsTimetableState extends State<StudentsTimetable> {
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
                               color: isSelected
-                                  ? AppColors.white.withValues(alpha: 0.85)
+                                  ? Colors.white.withValues(alpha: 0.85)
                                   : AppColors.textLight,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            d.num,
+                            '${d.date.day}',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
-                              color: isSelected
-                                  ? AppColors.white
-                                  : AppColors.textPrimary,
+                              color: isSelected ? Colors.white : AppColors.textPrimary,
                             ),
                           ),
-                          if (d.isToday && !isSelected)
+                          if (!isSelected && hasClass)
                             Container(
                               margin: const EdgeInsets.only(top: 4),
                               width: 5,
                               height: 5,
-                              decoration: const BoxDecoration(
-                                color: AppColors.primary,
+                              decoration: BoxDecoration(
+                                color: d.isToday ? AppColors.primary : AppColors.textLight,
                                 shape: BoxShape.circle,
                               ),
-                            ),
+                            )
+                          else
+                            const SizedBox(height: 9),
                         ],
                       ),
                     ),
@@ -256,7 +307,7 @@ class _StudentsTimetableState extends State<StudentsTimetable> {
             ),
             const SizedBox(height: 20),
 
-            // ── Selected day label ───────────────────────────────────────────
+            // ── Selected day label ─────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -272,10 +323,7 @@ class _StudentsTimetableState extends State<StudentsTimetable> {
                   if (day.isToday) ...[
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(20),
@@ -306,7 +354,7 @@ class _StudentsTimetableState extends State<StudentsTimetable> {
             ),
             const SizedBox(height: 12),
 
-            // ── Lesson list ──────────────────────────────────────────────────
+            // ── Lesson list ───────────────────────────────────────────────────
             Expanded(
               child: lessons.isEmpty
                   ? Center(
@@ -316,8 +364,8 @@ class _StudentsTimetableState extends State<StudentsTimetable> {
                           Container(
                             width: 64,
                             height: 64,
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceWarm,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF5F5F7),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -374,7 +422,7 @@ class _LessonCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: lesson.isOngoing
@@ -385,7 +433,7 @@ class _LessonCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // ── Left accent bar (ongoing only) + number ──────────────────────
+          // Number column
           Container(
             width: 52,
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -416,7 +464,7 @@ class _LessonCard extends StatelessWidget {
           ),
           Container(width: 1, color: AppColors.divider),
 
-          // ── Content ──────────────────────────────────────────────────────
+          // Content
           Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
@@ -426,12 +474,9 @@ class _LessonCard extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppColors.background,
+                          color: const Color(0xFFF5F5F7),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(color: AppColors.border),
                         ),
@@ -447,28 +492,21 @@ class _LessonCard extends StatelessWidget {
                       if (lesson.isOngoing) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: const Row(
                             children: [
-                              Icon(
-                                Icons.circle,
-                                size: 6,
-                                color: AppColors.white,
-                              ),
+                              Icon(Icons.circle, size: 6, color: Colors.white),
                               SizedBox(width: 4),
                               Text(
                                 'Ongoing',
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.white,
+                                  color: Colors.white,
                                 ),
                               ),
                             ],
@@ -489,33 +527,19 @@ class _LessonCard extends StatelessWidget {
                   const SizedBox(height: 3),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.person_outline_rounded,
-                        size: 12,
-                        color: AppColors.textLight,
-                      ),
+                      const Icon(Icons.person_outline_rounded, size: 12, color: AppColors.textLight),
                       const SizedBox(width: 4),
                       Text(
                         lesson.instructor,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
+                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                       ),
                       const SizedBox(width: 10),
-                      const Icon(
-                        Icons.book_outlined,
-                        size: 12,
-                        color: AppColors.textLight,
-                      ),
+                      const Icon(Icons.book_outlined, size: 12, color: AppColors.textLight),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           lesson.description,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textLight,
-                          ),
+                          style: const TextStyle(fontSize: 12, color: AppColors.textLight),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -523,25 +547,19 @@ class _LessonCard extends StatelessWidget {
                   ),
                   if (lesson.isOngoing) ...[
                     const SizedBox(height: 10),
-                    GestureDetector(
-                      child: Row(
-                        children: [
-                          Text(
-                            'Join live class',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 3),
-                          Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 12,
+                    Row(
+                      children: [
+                        Text(
+                          'Join live class',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.primary,
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 3),
+                        Icon(Icons.arrow_forward_rounded, size: 12, color: AppColors.primary),
+                      ],
                     ),
                   ],
                 ],

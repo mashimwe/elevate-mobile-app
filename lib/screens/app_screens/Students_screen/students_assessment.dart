@@ -298,7 +298,7 @@ class _StatsRow extends StatelessWidget {
                 const Text(
                   'Average Score',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 13,
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w500,
                   ),
@@ -317,7 +317,7 @@ class _StatsRow extends StatelessWidget {
                 Text(
                   '$graded graded',
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 13,
                     color: AppColors.textLight,
                   ),
                 ),
@@ -378,7 +378,7 @@ class _StatBadge extends StatelessWidget {
         Text(
           '$count $label',
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: 13,
             fontWeight: FontWeight.w500,
             color: AppColors.textSecondary,
           ),
@@ -666,7 +666,7 @@ class _ResourceTile extends StatelessWidget {
                 Text(
                   resource.title,
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
@@ -675,7 +675,7 @@ class _ResourceTile extends StatelessWidget {
                 Text(
                   resource.subject,
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 13,
                     color: AppColors.textSecondary,
                   ),
                 ),
@@ -683,7 +683,7 @@ class _ResourceTile extends StatelessWidget {
                 Text(
                   resource.meta,
                   style: const TextStyle(
-                    fontSize: 10,
+                    fontSize: 12,
                     color: AppColors.textLight,
                   ),
                 ),
