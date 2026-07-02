@@ -48,6 +48,7 @@ class LessonCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Time + Ongoing badge row
           Row(
             children: [
               Container(

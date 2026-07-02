@@ -1,7 +1,7 @@
 import 'package:era92_elevate/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
-// ── Lesson definitions (fixed schedule) ───────────────────────────────────────
+// ── Lesson definitions (fixed schedule) ─────────────────────────────────────
 
 class _LessonDef {
   const _LessonDef({
