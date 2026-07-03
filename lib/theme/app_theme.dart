@@ -33,7 +33,7 @@ class AppColors {
 
 class AppGradients {
   AppGradients._();
-
+  
   static const LinearGradient primary = LinearGradient(
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,

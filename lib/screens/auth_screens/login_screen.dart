@@ -1,3 +1,4 @@
+﻿import 'package:era92_elevate/apis/apis.dart';
 import 'package:era92_elevate/componets/text_field.dart';
 import 'package:era92_elevate/screens/app_screens/Students_screen/student_shell.dart';
 import 'package:era92_elevate/theme/app_theme.dart';
@@ -13,6 +14,45 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   int _tab = 0;
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  String? _errorText;
+
+  Future<void> _handleLogin() async {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
+
+    if (username.isEmpty || password.isEmpty) {
+      setState(() => _errorText = 'Please enter username and password');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorText = null;
+    });
+
+    try {
+      await Apis.login(username: username, password: password);
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const StudentShell()),
+      );
+    } catch (e) {
+      setState(() => _errorText = e.toString());
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
         body: Stack(
           fit: StackFit.expand,
           children: [
-            // ── Full-screen background ────────────────────────────
             Image.asset('assets/welcome-elevate-1.png', fit: BoxFit.cover),
-
-            // ── Dark overlay ──────────────────────────────────────
             DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -43,8 +80,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-
-            // ── Draggable card ────────────────────────────────────
             DraggableScrollableSheet(
               initialChildSize: 0.72,
               minChildSize: 0.55,
@@ -55,8 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 return Container(
                   decoration: const BoxDecoration(
                     color: AppColors.white,
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(30)),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
                   ),
                   child: Theme(
                     data: Theme.of(context).copyWith(
@@ -69,7 +103,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: scrollController,
                       padding: const EdgeInsets.fromLTRB(24, 12, 24, 48),
                       children: [
-                        // Drag handle
                         Center(
                           child: Container(
                             width: 36,
@@ -81,10 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 8),
-
-                        // Headline
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 200),
                           child: Align(
@@ -115,8 +145,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
-
-                        // ── Tab switcher ───────────────────────────
                         Container(
                           height: 46,
                           padding: const EdgeInsets.all(4),
@@ -132,8 +160,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 26),
-
-                        // ── Tab content ────────────────────────────
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 220),
                           switchInCurve: Curves.easeOut,
@@ -150,9 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Column(
                             key: ValueKey(_tab),
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: _tab == 0
-                                ? _loginContent()
-                                : _registerContent(),
+                            children: _tab == 0 ? _loginContent() : _registerContent(),
                           ),
                         ),
                       ],
@@ -167,19 +191,27 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ── Login ─────────────────────────────────────────────────────────
   List<Widget> _loginContent() => [
         MyTextfield(
           label: 'Username',
           icon: Icons.person_outline_rounded,
           obscuretext: false,
+          controller: _usernameController,
         ),
         const SizedBox(height: 12),
         MyTextfield(
           label: 'Password',
           icon: Icons.lock_outline_rounded,
           obscuretext: true,
+          controller: _passwordController,
         ),
+        if (_errorText != null) ...[
+          const SizedBox(height: 10),
+          Text(
+            _errorText!,
+            style: const TextStyle(color: Colors.red, fontSize: 13),
+          ),
+        ],
         const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -224,65 +256,28 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
         ),
         const SizedBox(height: 24),
-        _gradientButton('Login', () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const StudentShell()),
-          );
-        }),
+        _gradientButton(
+          _isLoading ? 'Logging in...' : 'Login',
+          _isLoading ? null : _handleLogin,
+        ),
       ];
 
-  // ── Register ──────────────────────────────────────────────────────
   List<Widget> _registerContent() => [
-        // Bio data
-        MyTextfield(
-          label: 'First Name',
-          icon: Icons.person_outline_rounded,
-          obscuretext: false,
-        ),
+        MyTextfield(label: 'First Name', icon: Icons.person_outline_rounded, obscuretext: false),
         const SizedBox(height: 12),
-        MyTextfield(
-          label: 'Last Name',
-          icon: Icons.person_outline_rounded,
-          obscuretext: false,
-        ),
+        MyTextfield(label: 'Last Name', icon: Icons.person_outline_rounded, obscuretext: false),
         const SizedBox(height: 12),
-        MyTextfield(
-          label: 'Phone Number',
-          icon: Icons.phone_outlined,
-          obscuretext: false,
-        ),
+        MyTextfield(label: 'Phone Number', icon: Icons.phone_outlined, obscuretext: false),
         const SizedBox(height: 12),
-        MyTextfield(
-          label: 'Date of Birth',
-          icon: Icons.cake_outlined,
-          obscuretext: false,
-        ),
+        MyTextfield(label: 'Date of Birth', icon: Icons.cake_outlined, obscuretext: false),
         const SizedBox(height: 20),
-        // Account details
-        MyTextfield(
-          label: 'Email Address',
-          icon: Icons.email_outlined,
-          obscuretext: false,
-        ),
+        MyTextfield(label: 'Email Address', icon: Icons.email_outlined, obscuretext: false),
         const SizedBox(height: 12),
-        MyTextfield(
-          label: 'Username',
-          icon: Icons.alternate_email_rounded,
-          obscuretext: false,
-        ),
+        MyTextfield(label: 'Username', icon: Icons.alternate_email_rounded, obscuretext: false),
         const SizedBox(height: 12),
-        MyTextfield(
-          label: 'Password',
-          icon: Icons.lock_outline_rounded,
-          obscuretext: true,
-        ),
+        MyTextfield(label: 'Password', icon: Icons.lock_outline_rounded, obscuretext: true),
         const SizedBox(height: 12),
-        MyTextfield(
-          label: 'Confirm Password',
-          icon: Icons.lock_outline_rounded,
-          obscuretext: true,
-        ),
+        MyTextfield(label: 'Confirm Password', icon: Icons.lock_outline_rounded, obscuretext: true),
         const SizedBox(height: 28),
         _gradientButton('Register', () {}),
         const SizedBox(height: 16),
@@ -290,14 +285,12 @@ class _LoginScreenState extends State<LoginScreen> {
           child: RichText(
             textAlign: TextAlign.center,
             text: const TextSpan(
-              style: TextStyle(
-                  fontSize: 12, color: AppColors.textLight, height: 1.6),
+              style: TextStyle(fontSize: 12, color: AppColors.textLight, height: 1.6),
               children: [
                 TextSpan(text: 'By registering you agree to our '),
                 TextSpan(
                   text: 'Terms & Conditions',
-                  style: TextStyle(
-                      color: AppColors.primary, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -305,7 +298,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ];
 
-  // ── Shared ────────────────────────────────────────────────────────
   Widget _tabItem(String label, int index) {
     final active = _tab == index;
     return Expanded(
@@ -317,13 +309,7 @@ class _LoginScreenState extends State<LoginScreen> {
             color: active ? AppColors.white : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             boxShadow: active
-                ? [
-                    BoxShadow(
-                      color: AppColors.black.withValues(alpha: 0.09),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ]
+                ? [BoxShadow(color: AppColors.black.withValues(alpha: 0.09), blurRadius: 10, offset: const Offset(0, 3))]
                 : [],
           ),
           alignment: Alignment.center,
@@ -332,8 +318,7 @@ class _LoginScreenState extends State<LoginScreen> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-              color:
-                  active ? AppColors.textPrimary : AppColors.textSecondary,
+              color: active ? AppColors.textPrimary : AppColors.textSecondary,
             ),
           ),
         ),
@@ -341,7 +326,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _gradientButton(String label, VoidCallback onPressed) => SizedBox(
+  Widget _gradientButton(String label, VoidCallback? onPressed) => SizedBox(
         width: double.infinity,
         height: 52,
         child: DecoratedBox(
@@ -362,16 +347,11 @@ class _LoginScreenState extends State<LoginScreen> {
               backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
               foregroundColor: AppColors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13)),
-              textStyle: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+              textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0.2),
             ),
             child: Text(label),
           ),
         ),
       );
-
 }

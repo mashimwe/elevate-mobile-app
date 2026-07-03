@@ -7,6 +7,7 @@ import 'package:era92_elevate/screens/app_screens/Students_screen/students_asses
 import 'package:era92_elevate/screens/app_screens/Students_screen/workshops_screen.dart';
 import 'package:era92_elevate/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:era92_elevate/componets/profile_card_overlay.dart';
 
 // ── Course data ───────────────────────────────────────────────────────────────
 
@@ -233,20 +234,27 @@ class StudentsHome extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              gradient: AppGradients.primary,
-              borderRadius: BorderRadius.circular(12),
+          GestureDetector(
+            onTap: () => showProfileCard(
+              context,
+              name: 'Student',
+              email: 'student@era92.com',
             ),
-            alignment: Alignment.center,
-            child: const Text(
-              'S',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                gradient: AppGradients.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              alignment: Alignment.center,
+              child: const Text(
+                'S',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
