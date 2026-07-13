@@ -38,6 +38,18 @@ const _defaultCourseVisual =
 
 _CourseVisual _visualFor(String slug) => _courseVisuals[slug] ?? _defaultCourseVisual;
 
+Widget _courseCardFor(Enrollment enrollment, {bool featured = false}) {
+  final visual = _visualFor(enrollment.courseSlug);
+  return CourseCard(
+    title: enrollment.courseName,
+    category: visual.category,
+    progress: enrollment.progress / 100,
+    icon: visual.icon,
+    accent: visual.accent,
+    featured: featured,
+  );
+}
+
 // ── Today's class data ────────────────────────────────────────────────────────
 
 class _ClassItem {
@@ -288,6 +300,9 @@ class StudentsHome extends StatelessWidget {
   // ── My Courses ───────────────────────────────────────────────────────────────
 
   Widget _buildCoursesSection(BuildContext context, CourseProvider courses) {
+    final count = courses.enrollments.length;
+    final title = count > 0 ? 'My Courses ($count)' : 'My Courses';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -295,9 +310,9 @@ class StudentsHome extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             children: [
-              const Text(
-                'My Courses',
-                style: TextStyle(
+              Text(
+                title,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -353,44 +368,14 @@ class StudentsHome extends StatelessWidget {
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Featured course (first in list)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: _courseCardFor(enrollments[0], featured: true),
-        ),
+    if (enrollments.length == 1) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: _courseCardFor(enrollments[0], featured: true),
+      );
+    }
 
-        // Additional courses (horizontal scroll if more than 1 course)
-        if (enrollments.length > 1) ...[
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 152,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: enrollments.length - 1,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, index) =>
-                  _courseCardFor(enrollments[index + 1]),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _courseCardFor(Enrollment enrollment, {bool featured = false}) {
-    final visual = _visualFor(enrollment.courseSlug);
-    return CourseCard(
-      title: enrollment.courseName,
-      category: visual.category,
-      progress: enrollment.progress / 100,
-      icon: visual.icon,
-      accent: visual.accent,
-      featured: featured,
-    );
+    return _CourseCarousel(enrollments: enrollments);
   }
 
   // ── Today's Classes ──────────────────────────────────────────────────────────
@@ -584,6 +569,64 @@ class StudentsHome extends StatelessWidget {
               return _WorkshopPreviewCard(item: w);
             },
           ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Course carousel (one card at a time, swipe for the next) ─────────────────
+
+class _CourseCarousel extends StatefulWidget {
+  const _CourseCarousel({required this.enrollments});
+  final List<Enrollment> enrollments;
+
+  @override
+  State<_CourseCarousel> createState() => _CourseCarouselState();
+}
+
+class _CourseCarouselState extends State<_CourseCarousel> {
+  final _controller = PageController();
+  int _current = 0;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 240,
+          child: PageView.builder(
+            controller: _controller,
+            itemCount: widget.enrollments.length,
+            onPageChanged: (i) => setState(() => _current = i),
+            itemBuilder: (context, index) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _courseCardFor(widget.enrollments[index], featured: true),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(widget.enrollments.length, (i) {
+            final isActive = i == _current;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: isActive ? 20 : 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: isActive ? AppColors.primary : AppColors.divider,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            );
+          }),
         ),
       ],
     );

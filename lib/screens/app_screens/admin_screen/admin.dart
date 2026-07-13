@@ -1,12 +1,38 @@
-//stateless widgets - These widgets are immutable and do not have any internal state. They are used to display static content or UI elements that do not change over time. Examples of stateless widgets include Text, Icon, and Container.
-//stateful widgets - These widgets maintain a mutable state that can change over time. They are used when the UI needs to update dynamically based on user interactions or other events. Examples of stateful widgets include Checkbox, Radio, Slider, and TextField.
+import 'package:era92_elevate/providers/auth_provider.dart';
+import 'package:era92_elevate/screens/auth_screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class AdminScreen extends StatelessWidget {
   const AdminScreen({super.key});
 
+  Future<void> _logout(BuildContext context) async {
+    await context.read<AuthProvider>().logout();
+    if (!context.mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    final user = context.watch<AuthProvider>().user;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(user?.fullName ?? 'Admin Screen'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout_rounded),
+            tooltip: 'Log out',
+            onPressed: () => _logout(context),
+          ),
+        ],
+      ),
+      body: Center(
+        child: Text('Signed in as ${user?.email ?? 'Admin'}'),
+      ),
+    );
   }
 }
