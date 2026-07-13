@@ -92,7 +92,15 @@ Screen/Widget  →  Provider (ChangeNotifier)  →  Api class  →  ApiClient (g
 
 `AppUser.isStudent` (`lib/models/app_user.dart`) is the one role check the
 app currently makes — `roles.contains('STUDENT')`. Everything that isn't a
-student currently lands on the placeholder `AdminScreen`.
+student currently lands on the placeholder `AdminScreen`. There's no
+`'ADMIN'` role check — it's "not a student" that routes there, not an
+explicit role match.
+
+`AppUser` also parses a `permissions` field (`List<String>`, from
+`json['permissions']`) and serializes it back in `toJson()`, but nothing in
+the app reads it — no screen or provider checks `permissions` for anything.
+It's a modeled-but-unused field, likely a placeholder for finer-grained
+permission checks later.
 
 ---
 
