@@ -1,9 +1,12 @@
-﻿import 'package:era92_elevate/apis/apis.dart';
-import 'package:era92_elevate/componets/text_field.dart';
+﻿import 'package:era92_elevate/componets/text_field.dart';
+import 'package:era92_elevate/providers/auth_provider.dart';
+import 'package:era92_elevate/providers/course_provider.dart';
 import 'package:era92_elevate/screens/app_screens/Students_screen/student_shell.dart';
+import 'package:era92_elevate/screens/app_screens/admin_screen/admin.dart';
 import 'package:era92_elevate/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -33,18 +36,35 @@ class _LoginScreenState extends State<LoginScreen> {
       _errorText = null;
     });
 
-    try {
-      await Apis.login(username: username, password: password);
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const StudentShell()),
-      );
-    } catch (e) {
-      setState(() => _errorText = e.toString());
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+    final auth = context.read<AuthProvider>();
+    final success = await auth.login(username, password);
+
+    if (!success) {
+      if (mounted) {
+        setState(() {
+          _errorText = auth.errorMessage;
+          _isLoading = false;
+        });
+      }
+      return;
     }
+
+    final user = auth.user!;
+    if (user.isStudent) {
+      if (!mounted) return;
+      await context.read<CourseProvider>().fetchEnrollments(
+            token: auth.token!,
+            contactId: user.contactId,
+          );
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => user.isStudent ? const StudentShell() : const AdminScreen(),
+      ),
+      (route) => false,
+    );
   }
 
   @override

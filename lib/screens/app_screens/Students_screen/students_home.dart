@@ -2,45 +2,41 @@ import 'package:era92_elevate/componets/announcements.dart';
 import 'package:era92_elevate/componets/tiles/course_card.dart';
 import 'package:era92_elevate/componets/todays_class_card.dart';
 import 'package:era92_elevate/models/assessment.dart';
+import 'package:era92_elevate/models/enrollment.dart';
+import 'package:era92_elevate/providers/auth_provider.dart';
+import 'package:era92_elevate/providers/course_provider.dart';
 import 'package:era92_elevate/screens/app_screens/Students_screen/assignment_detail_screen.dart';
 import 'package:era92_elevate/screens/app_screens/Students_screen/students_assessment.dart';
 import 'package:era92_elevate/screens/app_screens/Students_screen/workshops_screen.dart';
+import 'package:era92_elevate/screens/auth_screens/welcome_screen.dart';
 import 'package:era92_elevate/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:era92_elevate/componets/profile_card_overlay.dart';
+import 'package:provider/provider.dart';
 
-// ── Course data ───────────────────────────────────────────────────────────────
+// ── Course display mapping ──────────────────────────────────────────────────
+// The API returns course name/progress but no icon or accent color, so those
+// stay client-side, keyed off the course slug.
 
-class _CourseData {
-  const _CourseData({
-    required this.title,
-    required this.category,
-    required this.progress,
-    required this.totalLessons,
-    required this.completedLessons,
-    required this.icon,
-    required this.accent,
-  });
-  final String title;
-  final String category;
-  final double progress;
-  final int totalLessons;
-  final int completedLessons;
+class _CourseVisual {
+  const _CourseVisual(this.icon, this.accent, this.category);
   final IconData icon;
   final Color accent;
+  final String category;
 }
 
-const _courses = <_CourseData>[
-  _CourseData(
-    title: 'Website Development',
-    category: 'Technology',
-    progress: 0.42,
-    totalLessons: 24,
-    completedLessons: 10,
-    icon: Icons.laptop_mac_rounded,
-    accent: Color(0xFF1565C0),
-  ),
-];
+const _courseVisuals = <String, _CourseVisual>{
+  'graphic-design': _CourseVisual(Icons.brush_rounded, Color(0xFF7B1FA2), 'Design'),
+  'website-development':
+      _CourseVisual(Icons.laptop_mac_rounded, Color(0xFF1565C0), 'Technology'),
+  'film-photography': _CourseVisual(Icons.camera_alt_rounded, Color(0xFFEF6C00), 'Media'),
+  'alx-course': _CourseVisual(Icons.school_rounded, Color(0xFF2E7D32), 'Program'),
+};
+
+const _defaultCourseVisual =
+    _CourseVisual(Icons.menu_book_rounded, AppColors.primary, 'Course');
+
+_CourseVisual _visualFor(String slug) => _courseVisuals[slug] ?? _defaultCourseVisual;
 
 // ── Today's class data ────────────────────────────────────────────────────────
 
@@ -158,6 +154,9 @@ class StudentsHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final courses = context.watch<CourseProvider>();
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -165,11 +164,11 @@ class StudentsHome extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(context),
+              _buildHeader(context, auth),
               const SizedBox(height: 20),
               _buildAnnouncements(),
               const SizedBox(height: 24),
-              _buildCoursesSection(context),
+              _buildCoursesSection(context, courses),
               const SizedBox(height: 24),
               _buildTodaysClassesSection(context),
               const SizedBox(height: 24),
@@ -186,7 +185,11 @@ class StudentsHome extends StatelessWidget {
 
   // ── Header ──────────────────────────────────────────────────────────────────
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, AuthProvider auth) {
+    final displayName =
+        (auth.user?.fullName.isNotEmpty ?? false) ? auth.user!.fullName : 'Student';
+    final avatarInitial = displayName[0].toUpperCase();
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
@@ -204,9 +207,9 @@ class StudentsHome extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                const Text(
-                  'Student',
-                  style: TextStyle(
+                Text(
+                  displayName,
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -237,8 +240,18 @@ class StudentsHome extends StatelessWidget {
           GestureDetector(
             onTap: () => showProfileCard(
               context,
-              name: 'Student',
-              email: 'student@era92.com',
+              name: displayName,
+              email: auth.user?.email ?? '',
+              onLogout: () async {
+                Navigator.of(context).pop();
+                await context.read<AuthProvider>().logout();
+                if (!context.mounted) return;
+                context.read<CourseProvider>().clear();
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+                  (route) => false,
+                );
+              },
             ),
             child: Container(
               width: 42,
@@ -248,9 +261,9 @@ class StudentsHome extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               alignment: Alignment.center,
-              child: const Text(
-                'S',
-                style: TextStyle(
+              child: Text(
+                avatarInitial,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -274,7 +287,7 @@ class StudentsHome extends StatelessWidget {
 
   // ── My Courses ───────────────────────────────────────────────────────────────
 
-  Widget _buildCoursesSection(BuildContext context) {
+  Widget _buildCoursesSection(BuildContext context, CourseProvider courses) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -306,48 +319,77 @@ class StudentsHome extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
+        _buildCoursesBody(context, courses),
+      ],
+    );
+  }
 
+  Widget _buildCoursesBody(BuildContext context, CourseProvider courses) {
+    if (courses.isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (courses.error != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Text(
+          'Could not load your courses: ${courses.error}',
+          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+        ),
+      );
+    }
+
+    final enrollments = courses.enrollments;
+    if (enrollments.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Text(
+          'No courses yet',
+          style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         // Featured course (first in list)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: CourseCard(
-            title: _courses[0].title,
-            category: _courses[0].category,
-            progress: _courses[0].progress,
-            totalLessons: _courses[0].totalLessons,
-            completedLessons: _courses[0].completedLessons,
-            icon: _courses[0].icon,
-            accent: _courses[0].accent,
-            featured: true,
-          ),
+          child: _courseCardFor(enrollments[0], featured: true),
         ),
 
         // Additional courses (horizontal scroll if more than 1 course)
-        if (_courses.length > 1) ...[
+        if (enrollments.length > 1) ...[
           const SizedBox(height: 12),
           SizedBox(
-            height: 136,
+            height: 152,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: _courses.length - 1,
+              itemCount: enrollments.length - 1,
               separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final c = _courses[index + 1];
-                return CourseCard(
-                  title: c.title,
-                  category: c.category,
-                  progress: c.progress,
-                  totalLessons: c.totalLessons,
-                  completedLessons: c.completedLessons,
-                  icon: c.icon,
-                  accent: c.accent,
-                );
-              },
+              itemBuilder: (context, index) =>
+                  _courseCardFor(enrollments[index + 1]),
             ),
           ),
         ],
       ],
+    );
+  }
+
+  Widget _courseCardFor(Enrollment enrollment, {bool featured = false}) {
+    final visual = _visualFor(enrollment.courseSlug);
+    return CourseCard(
+      title: enrollment.courseName,
+      category: visual.category,
+      progress: enrollment.progress / 100,
+      icon: visual.icon,
+      accent: visual.accent,
+      featured: featured,
     );
   }
 

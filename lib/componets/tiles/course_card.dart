@@ -7,8 +7,8 @@ class CourseCard extends StatelessWidget {
     required this.title,
     required this.category,
     required this.progress,
-    required this.totalLessons,
-    required this.completedLessons,
+    this.totalLessons,
+    this.completedLessons,
     required this.icon,
     required this.accent,
     this.featured = false,
@@ -18,8 +18,8 @@ class CourseCard extends StatelessWidget {
   final String title;
   final String category;
   final double progress;
-  final int totalLessons;
-  final int completedLessons;
+  final int? totalLessons;
+  final int? completedLessons;
   final IconData icon;
   final Color accent;
   final bool featured;
@@ -99,11 +99,13 @@ class _FeaturedContent extends StatelessWidget {
               letterSpacing: -0.3,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            '${card.totalLessons} lessons',
-            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-          ),
+          if (card.totalLessons != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              '${card.totalLessons} lessons',
+              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            ),
+          ],
           const SizedBox(height: 16),
           Row(
             children: [
@@ -132,10 +134,11 @@ class _FeaturedContent extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              Text(
-                '${card.completedLessons} of ${card.totalLessons} lessons completed',
-                style: const TextStyle(fontSize: 11, color: AppColors.textLight),
-              ),
+              if (card.totalLessons != null && card.completedLessons != null)
+                Text(
+                  '${card.completedLessons} of ${card.totalLessons} lessons completed',
+                  style: const TextStyle(fontSize: 11, color: AppColors.textLight),
+                ),
               const Spacer(),
               const Row(
                 children: [
@@ -219,10 +222,11 @@ class _CompactContent extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              Text(
-                '${card.totalLessons} lessons',
-                style: const TextStyle(fontSize: 10, color: AppColors.textLight),
-              ),
+              if (card.totalLessons != null)
+                Text(
+                  '${card.totalLessons} lessons',
+                  style: const TextStyle(fontSize: 10, color: AppColors.textLight),
+                ),
             ],
           ),
         ],
