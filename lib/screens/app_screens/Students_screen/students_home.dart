@@ -1,54 +1,17 @@
 import 'package:era92_elevate/componets/announcements.dart';
-import 'package:era92_elevate/componets/tiles/course_card.dart';
 import 'package:era92_elevate/componets/todays_class_card.dart';
 import 'package:era92_elevate/models/assessment.dart';
-import 'package:era92_elevate/models/enrollment.dart';
 import 'package:era92_elevate/providers/auth_provider.dart';
 import 'package:era92_elevate/providers/course_provider.dart';
 import 'package:era92_elevate/screens/app_screens/Students_screen/assignment_detail_screen.dart';
 import 'package:era92_elevate/screens/app_screens/Students_screen/students_assessment.dart';
 import 'package:era92_elevate/screens/app_screens/Students_screen/workshops_screen.dart';
+import 'package:era92_elevate/screens/app_screens/Students_screen/course_integration.dart'; 
 import 'package:era92_elevate/screens/auth_screens/welcome_screen.dart';
 import 'package:era92_elevate/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:era92_elevate/componets/profile_card_overlay.dart';
 import 'package:provider/provider.dart';
-
-// ── Course display mapping ──────────────────────────────────────────────────
-// The API returns course name/progress but no icon or accent color, so those
-// stay client-side, keyed off the course slug.
-
-class _CourseVisual {
-  const _CourseVisual(this.icon, this.accent, this.category);
-  final IconData icon;
-  final Color accent;
-  final String category;
-}
-
-const _courseVisuals = <String, _CourseVisual>{
-  'graphic-design': _CourseVisual(Icons.brush_rounded, Color(0xFF7B1FA2), 'Design'),
-  'website-development':
-      _CourseVisual(Icons.laptop_mac_rounded, Color(0xFF1565C0), 'Technology'),
-  'film-photography': _CourseVisual(Icons.camera_alt_rounded, Color(0xFFEF6C00), 'Media'),
-  'alx-course': _CourseVisual(Icons.school_rounded, Color(0xFF2E7D32), 'Program'),
-};
-
-const _defaultCourseVisual =
-    _CourseVisual(Icons.menu_book_rounded, AppColors.primary, 'Course');
-
-_CourseVisual _visualFor(String slug) => _courseVisuals[slug] ?? _defaultCourseVisual;
-
-Widget _courseCardFor(Enrollment enrollment, {bool featured = false}) {
-  final visual = _visualFor(enrollment.courseSlug);
-  return CourseCard(
-    title: enrollment.courseName,
-    category: visual.category,
-    progress: enrollment.progress / 100,
-    icon: visual.icon,
-    accent: visual.accent,
-    featured: featured,
-  );
-}
 
 // ── Today's class data ────────────────────────────────────────────────────────
 
@@ -180,7 +143,13 @@ class StudentsHome extends StatelessWidget {
               const SizedBox(height: 20),
               _buildAnnouncements(),
               const SizedBox(height: 24),
-              _buildCoursesSection(context, courses),
+              
+              // NEW COURSES SECTION
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _buildNewCoursesSection(context, courses),
+              ),
+              
               const SizedBox(height: 24),
               _buildTodaysClassesSection(context),
               const SizedBox(height: 24),
@@ -195,11 +164,29 @@ class StudentsHome extends StatelessWidget {
     );
   }
 
+  // ── New Courses Section Integration ─────────────────────────────────────────
+
+  Widget _buildNewCoursesSection(BuildContext context, CourseProvider courses) {
+    if (courses.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (courses.error != null) {
+      return Text(
+        'Could not load your courses: ${courses.error}',
+        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+      );
+    }
+
+    return MyCoursesSection(enrollments: courses.enrollments);
+  }
+
   // ── Header ──────────────────────────────────────────────────────────────────
 
   Widget _buildHeader(BuildContext context, AuthProvider auth) {
-    final displayName =
-        (auth.user?.fullName.isNotEmpty ?? false) ? auth.user!.fullName : 'Student';
+    final displayName = (auth.user?.fullName.isNotEmpty ?? false)
+        ? auth.user!.fullName
+        : 'Student';
     final avatarInitial = displayName[0].toUpperCase();
 
     return Padding(
@@ -297,87 +284,6 @@ class StudentsHome extends StatelessWidget {
     );
   }
 
-  // ── My Courses ───────────────────────────────────────────────────────────────
-
-  Widget _buildCoursesSection(BuildContext context, CourseProvider courses) {
-    final count = courses.enrollments.length;
-    final title = count > 0 ? 'My Courses ($count)' : 'My Courses';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const Spacer(),
-              GestureDetector(
-                onTap: () {},
-                child: const Text(
-                  'See all',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        _buildCoursesBody(context, courses),
-      ],
-    );
-  }
-
-  Widget _buildCoursesBody(BuildContext context, CourseProvider courses) {
-    if (courses.isLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (courses.error != null) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Text(
-          'Could not load your courses: ${courses.error}',
-          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-        ),
-      );
-    }
-
-    final enrollments = courses.enrollments;
-    if (enrollments.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        child: Text(
-          'No courses yet',
-          style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-        ),
-      );
-    }
-
-    if (enrollments.length == 1) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: _courseCardFor(enrollments[0], featured: true),
-      );
-    }
-
-    return _CourseCarousel(enrollments: enrollments);
-  }
-
   // ── Today's Classes ──────────────────────────────────────────────────────────
 
   Widget _buildTodaysClassesSection(BuildContext context) {
@@ -403,9 +309,9 @@ class StudentsHome extends StatelessWidget {
                   color: AppColors.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(
-                  '${_todaysClasses.length}',
-                  style: const TextStyle(
+                child: const Text(
+                  '3',
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary,
@@ -413,15 +319,12 @@ class StudentsHome extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              GestureDetector(
-                onTap: () {},
-                child: const Text(
-                  'View all',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
+              const Text(
+                'View all',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
                 ),
               ),
             ],
@@ -429,12 +332,12 @@ class StudentsHome extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 212,
+          height: 180,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: _todaysClasses.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
               final c = _todaysClasses[index];
               return TodaysClassCard(
@@ -444,14 +347,6 @@ class StudentsHome extends StatelessWidget {
                 endTime: c.end,
                 isLive: c.isLive,
                 icon: c.icon,
-                onJoin: c.isLive
-                    ? () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const _LiveClassSession(),
-                          ),
-                        )
-                    : null,
               );
             },
           ),
@@ -460,7 +355,7 @@ class StudentsHome extends StatelessWidget {
     );
   }
 
-  // ── Recent Assignments ───────────────────────────────────────────────────────
+  // ── Assignments ──────────────────────────────────────────────────────────────
 
   Widget _buildAssignmentsSection(BuildContext context) {
     return Column(
@@ -575,64 +470,6 @@ class StudentsHome extends StatelessWidget {
   }
 }
 
-// ── Course carousel (one card at a time, swipe for the next) ─────────────────
-
-class _CourseCarousel extends StatefulWidget {
-  const _CourseCarousel({required this.enrollments});
-  final List<Enrollment> enrollments;
-
-  @override
-  State<_CourseCarousel> createState() => _CourseCarouselState();
-}
-
-class _CourseCarouselState extends State<_CourseCarousel> {
-  final _controller = PageController();
-  int _current = 0;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          height: 240,
-          child: PageView.builder(
-            controller: _controller,
-            itemCount: widget.enrollments.length,
-            onPageChanged: (i) => setState(() => _current = i),
-            itemBuilder: (context, index) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _courseCardFor(widget.enrollments[index], featured: true),
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(widget.enrollments.length, (i) {
-            final isActive = i == _current;
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              width: isActive ? 20 : 6,
-              height: 6,
-              decoration: BoxDecoration(
-                color: isActive ? AppColors.primary : AppColors.divider,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            );
-          }),
-        ),
-      ],
-    );
-  }
-}
-
 // ── Assignment preview tile ───────────────────────────────────────────────────
 
 class _AssignmentPreviewTile extends StatelessWidget {
@@ -728,7 +565,10 @@ class _AssignmentPreviewTile extends StatelessWidget {
                   ),
                   Text(
                     '/${item.totalMarks}',
-                    style: const TextStyle(fontSize: 10, color: AppColors.textLight),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: AppColors.textLight,
+                    ),
                   ),
                 ],
               )
@@ -738,7 +578,9 @@ class _AssignmentPreviewTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: _statusColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: _statusColor.withValues(alpha: 0.20)),
+                  border: Border.all(
+                    color: _statusColor.withValues(alpha: 0.20),
+                  ),
                 ),
                 child: Text(
                   _statusLabel,
@@ -756,7 +598,7 @@ class _AssignmentPreviewTile extends StatelessWidget {
   }
 }
 
-// ── Workshop preview card (vertical card, thumbnail at top) ───────────────────
+// ── Workshop preview card ───────────────────
 
 class _WorkshopPreviewCard extends StatelessWidget {
   const _WorkshopPreviewCard({required this.item});
@@ -789,62 +631,20 @@ class _WorkshopPreviewCard extends StatelessWidget {
                   Image.network(
                     'https://img.youtube.com/vi/${item.videoId}/hqdefault.jpg',
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: const Color(0xFFF5F5F7),
-                      child: const Center(
-                        child: Icon(
-                          Icons.play_circle_outline_rounded,
-                          size: 36,
-                          color: AppColors.textLight,
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Gradient overlay
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.45),
-                        ],
-                      ),
-                    ),
                   ),
                   // Play button
                   Center(
                     child: Container(
                       width: 42,
                       height: 42,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: AppColors.primary,
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.35),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
                       ),
-                      child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 24),
-                    ),
-                  ),
-                  // Duration
-                  Positioned(
-                    bottom: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.70),
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: Text(
-                        item.duration,
-                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
+                      child: const Icon(
+                        Icons.play_arrow_rounded,
+                        color: Colors.white,
+                        size: 24,
                       ),
                     ),
                   ),
@@ -852,74 +652,33 @@ class _WorkshopPreviewCard extends StatelessWidget {
               ),
             ),
             // Info
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.title,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                        height: 1.3,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
                     ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        const Icon(Icons.person_outline_rounded, size: 11, color: AppColors.textSecondary),
-                        const SizedBox(width: 3),
-                        Expanded(
-                          child: Text(
-                            item.instructor,
-                            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    item.instructor,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── In-session live class view (pushed from Join Now) ────────────────────────
-// This is a thin wrapper that delegates to StudentsLiveClass from the nav.
-// Keeping it here avoids a circular import; the nav version is the full screen.
-
-class _LiveClassSession extends StatelessWidget {
-  const _LiveClassSession();
-
-  @override
-  Widget build(BuildContext context) {
-    // Import would be circular; push a fresh full-screen page via shell index.
-    // For now show a direct navigation message until nav wiring is done.
-    return Scaffold(
-      backgroundColor: const Color(0xFF0D0D12),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0D0D12),
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'Live Class',
-          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-      ),
-      body: const Center(
-        child: Text(
-          'Tap Live Class in the navigation bar\nto enter your session.',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.6),
         ),
       ),
     );
