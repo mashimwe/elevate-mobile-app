@@ -7,7 +7,7 @@ class StoredSession {
   final Map<String, dynamic> userJson;
 }
 
-/// Persists the auth session so a user stays logged in across app restarts.
+/// Persists the auth session so a user stays logged in incase app restarts.
 class SessionStorage {
   static const _tokenKey = 'era92_elevate_token';
   static const _userKey = 'era92_elevate_user';
